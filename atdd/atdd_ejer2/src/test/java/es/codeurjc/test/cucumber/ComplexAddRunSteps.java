@@ -1,7 +1,7 @@
 package es.codeurjc.test.cucumber;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
