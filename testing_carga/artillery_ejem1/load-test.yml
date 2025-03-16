@@ -1,0 +1,9 @@
+config:
+  target: 'https://www.demoblaze.com/'
+  phases:
+    - duration: 20
+      arrivalRate: 20
+scenarios:
+  - flow:
+    - get:
+        url: "/prod.html?idp_=1"
