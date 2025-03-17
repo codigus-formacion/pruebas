@@ -1,0 +1,44 @@
+config:
+  target: "https://127.0.0.1:8443/api"
+  tls:
+    rejectUnauthorized: false
+  phases:
+    - duration: 10
+      arrivalRate: 5
+  payload:
+    - path: "books.csv"
+      fields:
+        - "title"
+        - "description"
+      order: "sequence"
+
+before: 
+  flow:
+    - post:
+        url: "/auth/login"
+        json:
+          username: "user"
+          password: "pass"
+    - post:
+        url: "/books/"
+        json:
+          title: "{{ title }}"
+          description: "{{ description }}"
+        capture:
+          json: "$.id"
+          as: "id"
+
+scenarios:
+  - flow:
+      - get:
+          url: "/books/{{ id }}"
+
+after:
+  flow:
+    - post:
+        url: "/auth/login"
+        json:
+          username: "admin"
+          password: "adminpass"
+    - delete:
+        url: "/books/{{ id }}"
