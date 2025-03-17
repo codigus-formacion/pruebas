@@ -1,0 +1,24 @@
+config:
+  # This is a test server run by team Artillery
+  target: http://asciiart.artillery.io:8080
+  phases:
+    - duration: 20
+      arrivalRate: 20
+scenarios:
+
+  - name: "Scenario 1: Get dinosaur"
+    weight: 1 # 1/8 of the cases
+    flow:
+      - get:
+          url: '/dino'
+  - name: "Scenario 2: Get pony"
+    weight: 2 # 2/8 of the cases
+    flow:
+      - get:
+          url: '/pony'
+  - name: "Scenario 3: Get armadillo"
+    weight: 5 # 5/8 of the cases
+    flow:
+      - get:
+          url: '/armadillo'
+

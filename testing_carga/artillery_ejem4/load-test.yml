@@ -1,0 +1,22 @@
+config:
+  plugins:
+    ensure: {}
+  target: "http://127.0.0.1:8080"
+  phases:
+    - duration: 20
+      arrivalRate: 10
+  payload:
+    path: "items.csv"
+    fields:
+      - "description"
+      - "checked"
+  ensure:
+    thresholds:
+      - "http.response_time.p95": 2
+scenarios:
+  - flow:
+    - post:
+        url: "/items/"
+        json:
+          description: "{{ description }}"
+          checked: "{{ checked }}"
