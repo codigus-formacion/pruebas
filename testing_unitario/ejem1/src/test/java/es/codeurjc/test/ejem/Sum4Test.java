@@ -1,11 +1,11 @@
 package es.codeurjc.test.ejem;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class Sum4Test {
@@ -16,12 +16,11 @@ public class Sum4Test {
 		assertEquals(a + b, result);
 	}
 	
-	public static Collection<Object[]> values() {
-		
-		Object[][] values = {
-				{0, 0, 0},
-				{1, 1, 2}
-		};
-		return Arrays.asList(values);		
+	public static Stream<Arguments> values() {
+		return Stream.of(
+				Arguments.of(0, 0, 0),
+				Arguments.of(1, 1, 2)
+		);		
 	}	
+
 }
