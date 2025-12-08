@@ -1,4 +1,4 @@
-package es.codeurjc.test.ejem;
+package es.codeurjc.test.chat;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeast;
@@ -11,9 +11,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
-
-import es.codeurjc.test.Chat;
-import es.codeurjc.test.User;
 
 public class ChatTest {
 

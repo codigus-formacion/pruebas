@@ -1,4 +1,4 @@
-package es.codeurjc.test;
+package es.codeurjc.test.chat;
 
 public class User {
 
