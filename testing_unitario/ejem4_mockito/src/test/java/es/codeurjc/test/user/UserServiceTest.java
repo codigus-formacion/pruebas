@@ -136,7 +136,7 @@ public class UserServiceTest {
     }
 
     /**
-     * TEST 5b: getUserByName() - Caso exitoso
+     * TEST 6: getUserByName() - Caso exitoso con usuario mockeado
      *
      * Cuando el usuario SÍ existe, debe devolverlo
      */
@@ -161,7 +161,7 @@ public class UserServiceTest {
     }
     
     /**
-     * TEST 6: getUserByName() - Usuario no existe, lanza excepción
+     * TEST 7: getUserByName() - Usuario no existe, lanza excepción
      * 
      * Cuando el usuario NO existe (null), debe lanzar UserNotFoundException
      */
@@ -183,7 +183,204 @@ public class UserServiceTest {
     }
     
     /**
-     * TEST 7: getUserByName() - Verificar que se llamó a findByName
+     * TEST 8: when() MÚLTIPLE - El último when() GANA
+     * 
+     * ¿Qué pasa si configuramos when() DOS VECES para el mismo método?
+     * Respuesta: El ÚLTIMO when() es el que se aplica (sobrescribe el anterior)
+     * 
+     * Esto es importante saberlo para evitar errores en tests complejos
+     */
+    @Test
+    public void when_CalledTwice_LastOneWins() {
+        UserDatabase databaseMock = mock(UserDatabase.class);
+        UserService userService = new UserService(databaseMock);
+        
+        // PRIMER when(): Configurar que devuelva un usuario
+        User firstConfig = new User("Juan", 25);
+        when(databaseMock.findByName("Juan")).thenReturn(firstConfig);
+        
+        // SEGUNDO when(): Configurar que devuelva OTRO usuario diferente
+        // ESTO SOBRESCRIBE LA CONFIGURACIÓN ANTERIOR
+        User secondConfig = new User("Ana", 30);
+        when(databaseMock.findByName("Ana")).thenReturn(secondConfig);
+        
+        // VERIFICAR: Se usa el SEGUNDO when() (el último gana)
+        User result = userService.getUserByName("Ana");
+        assertEquals(30, result.getAge()); // Edad del segundo config (30, no 25)
+        
+        // CONCLUSIÓN: Solo se aplica la última configuración
+    }
+    
+    /**
+     * TEST 9: when() MÚLTIPLE con null - Cambiar comportamiento
+     * 
+     * También podemos cambiar de "usuario existe" a "usuario no existe"
+     * configurando when() dos veces
+     */
+    @Test
+    public void when_ChangingFromUserToNull() {
+        UserDatabase databaseMock = mock(UserDatabase.class);
+        UserService userService = new UserService(databaseMock);
+        
+        // PRIMERO: Configurar que el usuario existe
+        User temporal = new User("Temporal", 20);
+        when(databaseMock.findByName("Temporal")).thenReturn(temporal);
+        
+        // VERIFICAR: Primera llamada devuelve el usuario
+        User result1 = userService.getUserByName("Temporal");
+        assertNotNull(result1);
+        assertEquals(20, result1.getAge());
+        
+        // SEGUNDO: Reconfigurar para que devuelva null (usuario eliminado)
+        when(databaseMock.findByName("Temporal")).thenReturn(null);
+        
+        // VERIFICAR: Segunda llamada lanza excepción (usuario ya no existe)
+        assertThrows(UserNotFoundException.class, () -> {
+            userService.getUserByName("Temporal");
+        });
+        
+        // Esto es útil para simular: crear usuario → eliminar usuario
+    }
+    
+    /**
+     * TEST 10: when() con DIFERENTES parámetros - No se sobrescriben
+     * 
+     * IMPORTANTE: when() solo sobrescribe si el parámetro es el MISMO.
+     * Si configuramos when() para DIFERENTES parámetros, ambos funcionan.
+     */
+    @Test
+    public void when_DifferentParameters_BothWork() {
+        UserDatabase databaseMock = mock(UserDatabase.class);
+        UserService userService = new UserService(databaseMock);
+        
+        // Configurar when() para "Pedro"
+        User pedro = new User("Pedro", 35);
+        when(databaseMock.findByName("Pedro")).thenReturn(pedro);
+        
+        // Configurar when() para "Luis"
+        User luis = new User("Luis", 40);
+        when(databaseMock.findByName("Luis")).thenReturn(luis);
+        
+        // VERIFICAR: Ambas configuraciones funcionan (no se sobrescriben)
+        assertEquals(35, userService.getUserByName("Pedro").getAge());
+        assertEquals(40, userService.getUserByName("Luis").getAge());
+        
+        // CONCLUSIÓN: Solo se sobrescribe cuando el parámetro es IGUAL
+    }
+    
+    /**
+     * TEST 11: when().thenReturn() con MÚLTIPLES valores - Devuelve secuencialmente
+     * 
+     * Mockito permite configurar que un método devuelva DIFERENTES valores
+     * en llamadas SUCESIVAS usando: thenReturn(valor1, valor2, valor3, ...)
+     * 
+     * Primera llamada → valor1
+     * Segunda llamada → valor2
+     * Tercera llamada → valor3
+     * Cuarta llamada en adelante → valor3 (se repite el último)
+     */
+    @Test
+    public void when_MultipleReturns_ReturnSequentially() {
+        UserDatabase databaseMock = mock(UserDatabase.class);
+        UserService userService = new UserService(databaseMock);
+        
+        // CONFIGURAR: Devolver diferentes usuarios en cada llamada
+        User ana = new User("Ana", 20);
+        User borja = new User("Borja", 25);
+        User carlos = new User("Carlos", 30);
+        
+        when(databaseMock.findByName(anyString()))
+            .thenReturn(ana, borja, carlos);
+        
+        // VERIFICAR: Primera llamada devuelve version1
+        User first = userService.getUserByName("Ana");
+        assertEquals(20, first.getAge());
+        
+        // VERIFICAR: Segunda llamada devuelve version2
+        User second = userService.getUserByName("Borja");
+        assertEquals(25, second.getAge());
+        
+        // VERIFICAR: Tercera llamada devuelve version3
+        User third = userService.getUserByName("Carlos");
+        assertEquals(30, third.getAge());
+        
+        // VERIFICAR: Cuarta llamada (y siguientes) repite version3
+        User fourth = userService.getUserByName("Carlos");
+        assertEquals(30, fourth.getAge()); // Mismo que el anterior
+    }
+    
+    /**
+     * TEST 12: when() con múltiples valores - Simular existe → eliminado
+     * 
+     * Caso práctico: Simular que un usuario existe inicialmente,
+     * pero después es eliminado (devuelve null)
+     */
+    @Test
+    public void when_MultipleReturns_SimulateDelete() {
+        UserDatabase databaseMock = mock(UserDatabase.class);
+        UserService userService = new UserService(databaseMock);
+        
+        User temporal = new User("Temporal", 25);
+        
+        // CONFIGURAR: Primera vez existe, segunda vez null (fue eliminado)
+        when(databaseMock.findByName("Temporal"))
+            .thenReturn(temporal, (User) null);
+        
+        // PRIMERA LLAMADA: Usuario existe
+        User found = userService.getUserByName("Temporal");
+        assertNotNull(found);
+        assertEquals("Temporal", found.getName());
+        
+        // SEGUNDA LLAMADA: Usuario ya no existe (eliminado)
+        assertThrows(UserNotFoundException.class, () -> {
+            userService.getUserByName("Temporal");
+        });
+        
+        // Esto simula perfectamente: buscar → eliminar → buscar de nuevo
+    }
+    
+    /**
+     * TEST 13: when() múltiples valores con thenReturn() encadenado
+     * 
+     * Alternativa: En lugar de thenReturn(val1, val2, val3)
+     * se puede usar: thenReturn(val1).thenReturn(val2).thenReturn(val3)
+     * 
+     * Ambas formas son equivalentes
+     */
+    @Test
+    public void when_ChainedThenReturn_SameAsMutlipleValues() {
+        UserDatabase databaseMock = mock(UserDatabase.class);
+        UserService userService = new UserService(databaseMock);
+        
+        User v1 = new User("Luis", 18);
+        User v2 = new User("Luis", 19);
+        User v3 = new User("Luis", 20);
+        
+        // FORMA 1: Múltiples valores en un solo thenReturn
+        when(databaseMock.findByName("Forma1"))
+            .thenReturn(v1, v2, v3);
+        
+        // FORMA 2: thenReturn encadenados (equivalente)
+        when(databaseMock.findByName("Forma2"))
+            .thenReturn(v1)
+            .thenReturn(v2)
+            .thenReturn(v3);
+        
+        // VERIFICAR: Forma 1
+        assertEquals(18, userService.getUserByName("Forma1").getAge());
+        assertEquals(19, userService.getUserByName("Forma1").getAge());
+        assertEquals(20, userService.getUserByName("Forma1").getAge());
+        
+        // VERIFICAR: Forma 2 (funciona igual)
+        assertEquals(18, userService.getUserByName("Forma2").getAge());
+        assertEquals(19, userService.getUserByName("Forma2").getAge());
+        assertEquals(20, userService.getUserByName("Forma2").getAge());
+        
+        // Ambas formas son válidas, usa la que prefieras
+    }
+    
+    /**
+     * TEST 14: getUserByName() - Verificar que se llamó a findByName
      * 
      * Además de verificar el resultado, podemos verificar las interacciones
      */
@@ -205,7 +402,7 @@ public class UserServiceTest {
     // ========== PARTE 4: PROBAR createUser() ==========
     
     /**
-     * TEST 8: createUser() - Usuario nuevo, se crea correctamente
+     * TEST 15: createUser() - Usuario nuevo, se crea correctamente
      */
     @Test
     public void createUser_NewUser_Success() {
@@ -232,7 +429,7 @@ public class UserServiceTest {
     }
     
     /**
-     * TEST 9: createUser() - Usuario ya existe, no se crea
+     * TEST 16: createUser() - Usuario ya existe, no se crea
      */
     @Test
     public void createUser_UserAlreadyExists_ReturnsFalse() {
@@ -259,7 +456,7 @@ public class UserServiceTest {
     // ========== PARTE 5: PROBAR deleteUser() ==========
     
     /**
-     * TEST 10: deleteUser() - Usuario existe, se elimina
+     * TEST 17: deleteUser() - Usuario existe, se elimina
      */
     @Test
     public void deleteUser_UserExists_ReturnsTrue() {
@@ -280,7 +477,7 @@ public class UserServiceTest {
     }
     
     /**
-     * TEST 11: deleteUser() - Usuario no existe, retorna false
+     * TEST 18: deleteUser() - Usuario no existe, retorna false
      */
     @Test
     public void deleteUser_UserNotFound_ReturnsFalse() {
@@ -300,7 +497,7 @@ public class UserServiceTest {
     // ========== PARTE 6: PROBAR isAdult() ==========
     
     /**
-     * TEST 12: isAdult() - Usuario mayor de edad
+     * TEST 19: isAdult() - Usuario mayor de edad
      */
     @Test
     public void isAdult_UserIsAdult_ReturnsTrue() {
@@ -319,7 +516,7 @@ public class UserServiceTest {
     }
     
     /**
-     * TEST 13: isAdult() - Usuario menor de edad
+     * TEST 20: isAdult() - Usuario menor de edad
      */
     @Test
     public void isAdult_UserIsMinor_ReturnsFalse() {
@@ -338,7 +535,7 @@ public class UserServiceTest {
     }
     
     /**
-     * TEST 14: isAdult() - Usuario justo en el límite (18 años)
+     * TEST 21: isAdult() - Usuario justo en el límite (18 años)
      */
     @Test
     public void isAdult_UserIs18_ReturnsTrue() {
@@ -357,7 +554,7 @@ public class UserServiceTest {
     }
     
     /**
-     * TEST 15: isAdult() - Usuario no existe, lanza excepción
+     * TEST 22: isAdult() - Usuario no existe, lanza excepción
      * 
      * isAdult() usa getUserByName() internamente, que lanza excepción si no existe
      */
@@ -378,7 +575,7 @@ public class UserServiceTest {
     // ========== PARTE 7: PROBAR isServiceAvailable() ==========
     
     /**
-     * TEST 16: isServiceAvailable() - Base de datos conectada
+     * TEST 23: isServiceAvailable() - Base de datos conectada
      */
     @Test
     public void isServiceAvailable_DatabaseConnected_ReturnsTrue() {
@@ -396,7 +593,7 @@ public class UserServiceTest {
     }
     
     /**
-     * TEST 17: isServiceAvailable() - Base de datos desconectada
+     * TEST 24: isServiceAvailable() - Base de datos desconectada
      */
     @Test
     public void isServiceAvailable_DatabaseDisconnected_ReturnsFalse() {
@@ -416,7 +613,7 @@ public class UserServiceTest {
     // ========== PARTE 8: CASOS COMPLEJOS ==========
     
     /**
-     * TEST 18: Escenario completo - Crear y verificar usuario
+     * TEST 25: Escenario completo - Crear y verificar usuario
      */
     @Test
     public void completeScenario_CreateAndVerifyUser() {
@@ -449,7 +646,7 @@ public class UserServiceTest {
     }
     
     /**
-     * TEST 19: Múltiples usuarios con diferentes respuestas
+     * TEST 26: Múltiples usuarios con diferentes respuestas
      * 
      * Podemos configurar el mock para responder diferente según el parámetro
      */
@@ -481,7 +678,7 @@ public class UserServiceTest {
     // ========== RESUMEN FINAL ==========
     
     /**
-     * TEST 20: Resumen de conceptos clave
+     * TEST 27: Resumen de conceptos clave
      * 
      * Este test resume todo lo aprendido:
      * 1. Crear mock de la base de datos
