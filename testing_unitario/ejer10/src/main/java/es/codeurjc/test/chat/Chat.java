@@ -6,13 +6,23 @@ import java.util.List;
 public class Chat {
 
 	private String name;
+	private MediaServer ms;
 	private List<User> users = new ArrayList<>();
 
 	public Chat(String name) {
 		this.name = name;
 	}
 
+	public Chat(String name, MediaServer ms) {
+		this.name = name;
+		this.ms = ms;
+	}
+
 	public void addUser(User user) {
+
+		if (ms != null && !ms.allowMoreUsers()) {
+			throw new NotEnoughResourcesException();
+		}
 
 		for (User u : users) {
 			u.newUserInChat(name, user.getName());

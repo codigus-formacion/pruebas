@@ -123,15 +123,40 @@ public class UserServiceTest {
         UserService userService = new UserService(databaseMock);
         
         // CONFIGURAR: El usuario existe en la BD
-        User maria = new User("Maria", 30);
-        when(databaseMock.findByName("Maria")).thenReturn(maria);
+        User Mario = new User("Mario", 30);
+        when(databaseMock.findByName("Mario")).thenReturn(Mario);
         
         // ACTUAR: Buscar el usuario
-        User result = userService.getUserByName("Maria");
+        User result = userService.getUserByName("Mario");
         
         // VERIFICAR: Se devuelve el usuario correcto
         assertNotNull(result);
-        assertEquals("Maria", result.getName());
+        assertEquals("Mario", result.getName());
+        assertEquals(30, result.getAge());
+    }
+
+    /**
+     * TEST 5b: getUserByName() - Caso exitoso
+     *
+     * Cuando el usuario SÍ existe, debe devolverlo
+     */
+    @Test
+    public void getUserByName_UserExists_ReturnsStubUser() {
+        UserDatabase databaseMock = mock(UserDatabase.class);
+        UserService userService = new UserService(databaseMock);
+
+        // CONFIGURAR: El usuario existe en la BD
+        User Mario = mock(User.class);
+        when(Mario.getName()).thenReturn("Mario");
+        when(Mario.getAge()).thenReturn(30);
+        when(databaseMock.findByName("Mario")).thenReturn(Mario);
+
+        // ACTUAR: Buscar el usuario
+        User result = userService.getUserByName("Mario");
+
+        // VERIFICAR: Se devuelve el usuario correcto
+        assertNotNull(result);
+        assertEquals("Mario", result.getName());
         assertEquals(30, result.getAge());
     }
     
@@ -146,15 +171,15 @@ public class UserServiceTest {
         UserService userService = new UserService(databaseMock);
         
         // CONFIGURAR: El usuario NO existe (devuelve null)
-        when(databaseMock.findByName("NoExiste")).thenReturn(null);
+        when(databaseMock.findByName("Mario")).thenReturn(null);
         
         // VERIFICAR: Se lanza la excepción esperada
         UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            userService.getUserByName("NoExiste");
+            userService.getUserByName("Mario");
         });
         
         // VERIFICAR: El mensaje de la excepción es correcto
-        assertEquals("Usuario no encontrado: NoExiste", exception.getMessage());
+        assertEquals("Mario", exception.getMessage());
     }
     
     /**

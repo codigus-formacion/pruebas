@@ -1,30 +1,29 @@
 package es.codeurjc.test.chat;
 
-import es.codeurjc.test.chat.Chat;
-import es.codeurjc.test.chat.MediaServer;
-import es.codeurjc.test.chat.NotEnoughResourcesException;
-import es.codeurjc.test.chat.User;
-
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.*;
 
 public class ChatTest {
 
 	@Test
 	public void addUser() {
-
+		
+		// GIVEN
 		Chat chat = new Chat("Test");
 		User user1 = mock(User.class);
 		User user2 = mock(User.class);
-
 		when(user2.getName()).thenReturn("Pepe");
-
+		
+		// WHEN 
 		chat.addUser(user1);
 		chat.addUser(user2);
-
+		
+		// THEN
 		verify(user1).newUserInChat("Test", "Pepe");
 	}
 
@@ -66,47 +65,4 @@ public class ChatTest {
 		verify(user2).onMessage("Test", "Heidi", "Hello");
 		verify(user1, never()).onMessage("Test", "Heidi", "Hello");
 	}
-
-	@Test
-	public void addUserWithoutResources() {
-
-		User user1 = mock(User.class);
-		MediaServer mediaServer = mock(MediaServer.class);
-		Chat chat = new Chat("Test", mediaServer);
-
-		when(mediaServer.allowMoreUsers()).thenReturn(false);
-
-		assertThatThrownBy(() -> chat.addUser(user1)).isInstanceOf(NotEnoughResourcesException.class);
-	}
-
-	@Test
-	public void addUserWithResources() {
-
-		User user1 = mock(User.class);
-		MediaServer mediaServer = mock(MediaServer.class);
-		Chat chat = new Chat("Test", mediaServer);
-
-		when(mediaServer.allowMoreUsers()).thenReturn(true);
-
-		chat.addUser(user1);
-	}
-
-	@Test
-	public void addFirstUserWithResourcesAnd2ndWithout() {
-
-		User user1 = mock(User.class);
-		User user2 = mock(User.class);
-
-		MediaServer mediaServer = mock(MediaServer.class);
-		Chat chat = new Chat("Test", mediaServer);
-
-		when(mediaServer.allowMoreUsers()).thenReturn(true);
-
-		chat.addUser(user1);
-
-		when(mediaServer.allowMoreUsers()).thenReturn(false);
-
-		assertThatThrownBy(() -> chat.addUser(user2)).isInstanceOf(NotEnoughResourcesException.class);
-	}
-
 }
