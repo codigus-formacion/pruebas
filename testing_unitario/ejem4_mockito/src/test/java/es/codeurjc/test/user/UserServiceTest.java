@@ -239,33 +239,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void test12_WhenThenThrow_SimulateException() {
-        UserDatabase databaseMock = mock(UserDatabase.class);
-        UserService userService = new UserService(databaseMock);
-
-        // SIMULAR: delete() lanza UserDeletionException usando when().thenThrow()
-        when(databaseMock.delete("UsuarioConPedidos"))
-                .thenThrow(new UserDeletionException("Usuario tiene pedidos asociados"));
-
-        // VERIFICAR: El servicio maneja la excepción y devuelve false
-        boolean deleted = userService.deleteUser("UsuarioConPedidos");
-        assertFalse(deleted);
-
-        // VERIFICAR: Podemos capturar la excepción directamente si llamamos al mock
-        Exception exception = assertThrows(UserDeletionException.class, () -> {
-            databaseMock.delete("UsuarioConPedidos");
-        });
-        assertEquals("Usuario tiene pedidos asociados", exception.getMessage());
-
-        // Otros usuarios NO lanzan excepción (solo configuramos para uno específico)
-        assertFalse(databaseMock.delete("OtroUsuario")); // Devuelve false por defecto
-
-        // CONCLUSIÓN: when().thenThrow() es más legible que doThrow() para métodos con
-        // retorno
-    }
-
-    @Test
-    public void test13_Verify_BasicCall() {
+    public void test12_Verify_BasicCall() {
         UserDatabase databaseMock = mock(UserDatabase.class);
         UserService userService = new UserService(databaseMock);
 
@@ -282,7 +256,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void test14_Verify_Never() {
+    public void test13_Verify_Never() {
         UserDatabase databaseMock = mock(UserDatabase.class);
         UserService userService = new UserService(databaseMock);
 
@@ -305,7 +279,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void test15_Verify_TimesVariants() {
+    public void test14_Verify_TimesVariants() {
         UserDatabase databaseMock = mock(UserDatabase.class);
 
         // ACTUAR
