@@ -37,8 +37,9 @@ public interface UserDatabase {
      * 
      * @param name Nombre del usuario a eliminar
      * @return true si se eliminó, false si no existía
+     * @throws UserDeletionException si el usuario no puede ser eliminado
      */
-    boolean delete(String name);
+    boolean delete(String name) throws UserDeletionException;
     
     /**
      * Verifica si la base de datos está disponible

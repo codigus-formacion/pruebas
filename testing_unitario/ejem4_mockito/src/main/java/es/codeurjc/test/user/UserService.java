@@ -42,7 +42,7 @@ public class UserService {
      * @param age Edad del usuario
      * @return true si se creó correctamente, false si ya existía
      */
-    public boolean createUser(String name, String email, int age) {
+    public boolean createUser(String name, int age) {
         // Verificar si ya existe
         User existing = database.findByName(name);
         if (existing != null) {
@@ -58,10 +58,15 @@ public class UserService {
      * Elimina un usuario si existe.
      * 
      * @param name Nombre del usuario a eliminar
-     * @return true si se eliminó, false si no existía
+     * @return true si se eliminó, false si no existía o no pudo ser eliminado
      */
     public boolean deleteUser(String name) {
-        return database.delete(name);
+        try {
+            return database.delete(name);
+        } catch (UserDeletionException e) {
+            // El usuario no puede ser eliminado (tiene dependencias, etc.)
+            return false;
+        }
     }
     
     /**
